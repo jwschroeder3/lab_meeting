@@ -38,19 +38,19 @@ def gillespie(x, alpha_m, tau_m, alpha_p, tau_p, delta, N):
         # Determine rates
         rates = np.array(
             [
-                alpha_m,
-                x[0] * tau_m,
-                x[0] * alpha_p,
-                x[1] * tau_p
+                alpha_m,        # reaction 1 (mRNA birth) rate
+                x[0] * tau_m,   # rxn 2 (mRNA death) rate
+                x[0] * alpha_p, # rxn 3 (protein birth) rate
+                x[1] * tau_p    # rxn 4 (protein death) rate
             ]
         )
         summed = np.sum(rates)
 
         # Determine WHEN state change occurs
-        tau = (-1) / summed * np.log(random.random())
-        t = t + tau
+        tstep = (-1) / summed * np.log(random.random())
+        t = t + tstep
         T[i] = t
-        tsteps[i] = tau
+        tsteps[i] = tstep
 
         # Determine WHICH reaction occurs with relative propabilities
         reac = np.sum(np.cumsum(np.true_divide(rates, summed)) < random.random())
@@ -78,10 +78,11 @@ delta = np.array(
         [0, 0, 1, -1]  # protein changes for each column
     ]
 )
-N = 100000
+N = 10000
 
 #%%
 Xg,Tg,tsteps = gillespie(x, alpha_m, tau_m, alpha_p, tau_p, delta, N)
+
 # %%
 fig,ax = plt.subplots(nrows=2, sharex=True)
 
@@ -106,8 +107,9 @@ def ode(x, t, alpha_m, tau_m, alpha_p, tau_p):
     
     S = np.empty(x.shape)
 
+    # dmRNA/dt
     S[0] = alpha_m - x[0] * tau_m
-
+    # dP/dt
     S[1] = x[0] * alpha_p - x[1] * tau_p
 
     return S
@@ -207,7 +209,7 @@ alpha_m = 0.5
 tau_m = 0.05
 alpha_p = 5
 tau_p = 0.05
-bind_rate = 0.001
+bind_rate = 0.1
 
 delta = np.array(
     [
@@ -216,10 +218,11 @@ delta = np.array(
         [0, 0, 0, 0, -1, 1] # DNA_free changes for each column
     ]
 )
-N = 100000
+N = 10000
 
 #%%
 Xg,Tg,tsteps = neg_trx_feedback_gillespie(x, alpha_m, tau_m, alpha_p, tau_p, bind_rate, delta, N)
+
 # %%
 fig,ax = plt.subplots(nrows=3, sharex=True)
 
